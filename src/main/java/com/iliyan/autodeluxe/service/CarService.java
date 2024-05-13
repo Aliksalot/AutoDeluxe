@@ -71,25 +71,27 @@ public class CarService {
     }
 
     public void buyCar(long id) {
-        if (this.carRepository.findById(id).isPresent()){
-            User currentUser = this.userRepository.findById(loggedUser.getId()).get();
-            CarModel car = this.modelMapper.map(this.carRepository.findById(id).get(), CarModel.class);
+        if (!this.carRepository.findById(id).isPresent())
+            return;
+        
+        User currentUser = this.userRepository.findById(loggedUser.getId()).get();
+        CarModel car = this.modelMapper.map(this.carRepository.findById(id).get(), CarModel.class);
 
-            UserModel userModel = findCarOwner(car);
-            if (userModel == null)
-                return;
-            User seller = this.userRepository.findById(userModel.getId()).get();
+        UserModel userModel = findCarOwner(car);
+        if (userModel == null)
+            return;
+        User seller = this.userRepository.findById(userModel.getId()).get();
 
-            if (loggedUser.getId() == seller.getId())
-                return;
+        if (loggedUser.getId() == seller.getId())
+            return;
 
-            seller.getCarsForSale().getCars().removeIf(c -> c.getId() == car.getId());
-            seller.getSoldCars().getCars().add(this.modelMapper.map(car, Car.class));
-            currentUser.getBoughtCars().getCars().add(this.modelMapper.map(car, Car.class));
+        seller.getCarsForSale().getCars().removeIf(c -> c.getId() == car.getId());
+        seller.getSoldCars().getCars().add(this.modelMapper.map(car, Car.class));
+        currentUser.getBoughtCars().getCars().add(this.modelMapper.map(car, Car.class));
 
-            this.userRepository.save(seller);
-            this.userRepository.save(currentUser);
-        }
+        this.userRepository.save(seller);
+        this.userRepository.save(currentUser);
+        
     }
 
     private UserModel findCarOwner(CarModel carModel) {
